@@ -1,104 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Expense Tracker</title>
-  <!-- Bootstrap CSS -->
-  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    /* Custom CSS */
-    body {
-      font-family: Arial, sans-serif;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </head>
 <body>
-  <div class="container mt-5">
-    <div class="row justify-content-center">
-      <div class="col-md-6">
-        <h1 class="text-center mb-4">Expense Tracker</h1>
-        <div class="input-group mb-3">
-          <input type="text" id="expenseInput" class="form-control" placeholder="Enter expense">
-          <div class="input-group-append">
-            <button class="btn btn-primary" type="button" onclick="addExpense()">Add Expense</button>
-          </div>
-        </div>
-        <ul id="expenseList" class="list-group"></ul>
-        <div class="mt-3">
-          <p>Total Balance: <span id="totalBalance">0</span></p>
-        </div>
-      </div>
+    <div>
+        <label for="amount">Amount:</label>
+        <input type="number" id="amount">
     </div>
-  </div>
+    <div>
+        <label for="des">Description:</label>
+        <input type="text" id="des">
+    </div>
+    <div>
+        <label for="category">Category:</label>
+        <select id="category">
+            <option value="raw_material">Raw Material</option>
+            <option value="salary">Salary</option>
+            <option value="advances">Advances</option>
+        </select>
+    </div>
+    <div>
+        <button type="button" onclick="addExpense()">Add Expense</button>
+    </div>
+    <ul id="expenseList"></ul>
 
-  <!-- Bootstrap JS and custom script -->
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-  <script>
-    let expenses = [];
+    <script>
+        function addExpense() {
+            const amount = document.getElementById('amount').value;
+            const description = document.getElementById('des').value;
+            const category = document.getElementById('category').value;
 
-    // Load expenses from local storage
-    const savedExpenses = localStorage.getItem('expenses');
-    if (savedExpenses) {
-      expenses = JSON.parse(savedExpenses);
-      displayExpenses();
-    }
+            const expense = {
+                amount: amount,
+                description: description,
+                category: category
+            };
 
-    // Function to add expense
-    function addExpense() {
-      const expenseInput = document.getElementById('expenseInput');
-      const expenseValue = expenseInput.value.trim();
+            let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+            expenses.push(expense);
+            localStorage.setItem('expenses', JSON.stringify(expenses));
 
-      if (expenseValue !== '') {
-        expenses.push(expenseValue);
-        saveExpenses();
-        displayExpenses();
-        expenseInput.value = '';
-        updateTotalBalance();
-      } else {
-        alert('Please enter a valid expense!');
-      }
-    }
+            document.getElementById('amount').value = '';
+            document.getElementById('des').value = '';
+            document.getElementById('category').value = 'raw_material';
 
-    // Function to delete expense
-    function deleteExpense(index) {
-      expenses.splice(index, 1);
-      saveExpenses();
-      displayExpenses();
-      updateTotalBalance();
-    }
+            updateExpenseList();
+        }
 
-    // Function to display expenses
-    function displayExpenses() {
-      const expenseList = document.getElementById('expenseList');
-      expenseList.innerHTML = '';
+        function deleteExpense(index) {
+            let expenses = JSON.parse(localStorage.getItem('expenses'));
+            expenses.splice(index, 1);
+            localStorage.setItem('expenses', JSON.stringify(expenses));
+            updateExpenseList();
+        }
 
-      expenses.forEach((expense, index) => {
-        const li = document.createElement('li');
-        li.textContent = expense;
-        li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center');
-        const deleteBtn = document.createElement('button');
-        deleteBtn.innerHTML = '&times;';
-        deleteBtn.classList.add('btn', 'btn-danger', 'btn-sm');
-        deleteBtn.onclick = () => deleteExpense(index);
-        li.appendChild(deleteBtn);
-        expenseList.appendChild(li);
-      });
-    }
+        function editExpense(index) {
+            let expenses = JSON.parse(localStorage.getItem('expenses'));
+            const expense = expenses[index];
+            document.getElementById('amount').value = expense.amount;
+            document.getElementById('des').value = expense.description;
+            document.getElementById('category').value = expense.category;
+            expenses.splice(index, 1);
+            localStorage.setItem('expenses', JSON.stringify(expenses));
+            updateExpenseList();
+        }
 
-    // Function to save expenses to local storage
-    function saveExpenses() {
-      localStorage.setItem('expenses', JSON.stringify(expenses));
-    }
+        function updateExpenseList() {
+            const expenseList = document.getElementById('expenseList');
+            expenseList.innerHTML = '';
+            let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+            expenses.forEach((expense, index) => {
+                const listItem = document.createElement('li');
+                listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+                listItem.innerHTML = `
+                    ${expense.amount} - ${expense.description} - ${expense.category}
+                    <span>
+                        <button onclick="deleteExpense(${index})">Delete</button>
+                        <button onclick="editExpense(${index})">Edit</button>
+                    </span>
+                `;
+                expenseList.appendChild(listItem);
+            });
+        }
 
-    // Function to update total balance
-    function updateTotalBalance() {
-      const totalBalance = document.getElementById('totalBalance');
-      const sum = expenses.reduce((acc, curr) => acc + parseFloat(curr), 0);
-      totalBalance.textContent = sum.toFixed(2);
-    }
-  </script>
+        updateExpenseList();
+    </script>
 </body>
 </html>
